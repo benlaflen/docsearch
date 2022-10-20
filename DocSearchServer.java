@@ -7,13 +7,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 class FileHelpers {
     static List<File> getFiles(Path start) throws IOException {
         File f = start.toFile();
         List<File> result = new ArrayList<>();
         if(f.isDirectory()) {
-            System.out.println("It's a folder");
+            System.out.println("It's a folder!");
             File[] paths = f.listFiles();
             for(File subFile: paths) {
                 result.addAll(getFiles(subFile.toPath()));
@@ -36,7 +37,30 @@ class Handler implements URLHandler {
       this.files = FileHelpers.getFiles(Paths.get(directory));
     }
     public String handleRequest(URI url) throws IOException {
-      return "Don't know how to handle that path!";
+        System.out.println("Path: " + url.getPath());
+        if(url.getPath().equals("/")) {
+        return "There are " + files.size() + " files to search!";
+      }
+      if(url.getPath().contains("search")) {
+        String searchterm = url.getQuery().substring(url.getQuery().indexOf('=')+1, url.getQuery().length());
+        System.out.println("Search: " + searchterm);
+        String returner = "";
+        int count = 0;
+        for(File f: files) {
+            Scanner scanner = new Scanner(f);
+            while(scanner.hasNext()) {
+                if(scanner.nextLine().contains(searchterm)) {
+                    count+=1;
+                    returner += f.getAbsolutePath() + "\n";
+                    break;
+                }
+            }
+        }
+        returner = "There were " + count + " Files Found:\n" + returner;
+        return returner;
+      }
+      
+        return "Don't know how to handle that path!";
     }
 }
 
